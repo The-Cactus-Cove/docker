@@ -31,7 +31,7 @@ services:
     networks:
       - infisical
     volumes:
-      - ${DOCKER_DIR}/infisical/redis:/data
+      - infisical_redis:/data
 
   db:
     container_name: infisical-db
@@ -39,7 +39,7 @@ services:
     restart: always
     env_file: .env
     volumes:
-      - ${DOCKER_DIR}/infisical/db:/var/lib/postgresql/data
+      - infisical_db:/var/lib/postgresql/data
     networks:
       - infisical
     healthcheck:
@@ -47,6 +47,10 @@ services:
       interval: 5s
       timeout: 10s
       retries: 10
+
+volumes:
+  infisical_redis:
+  infisical_db:
 
 networks:
   infisical:

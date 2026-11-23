@@ -1,0 +1,54 @@
+services:
+  backend:
+    container_name: infisical-backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    image: infisical/infisical:latest # PIN THIS TO A SPECIFIC TAG
+    pull_policy: always
+    env_file: .env
+    ports:
+      - 7752:8080
+    environment:
+      - NODE_ENV=production
+      - AUTH_SECRET
+      - ENCRYPTION_KEY
+    networks:
+      - infisical
+    labels:
+      - "dockhand.url=[Infisical](https://secrets.cactuscove.casa)"
+
+  redis:
+    image: redis
+    container_name: infisical-dev-redis
+    env_file: .env
+    restart: always
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    networks:
+      - infisical
+    volumes:
+      - ${DOCKER_DIR}/infisical/redis:/data
+
+  db:
+    container_name: infisical-db
+    image: postgres:14-alpine
+    restart: always
+    env_file: .env
+    volumes:
+      - ${DOCKER_DIR}/infisical/db:/var/lib/postgresql/data
+    networks:
+      - infisical
+    healthcheck:
+      test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+networks:
+  infisical:
+  secrets:
+    external: true

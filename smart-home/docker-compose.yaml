@@ -22,7 +22,7 @@ services:
     volumes:
       - zwavejs:/usr/src/app/store
     devices:
-      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/zwave"
+      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00"
     environment:
       - ZWAVEJS_EXTERNAL_CONFIG=/usr/src/app/store/.config-db
       - TZ=${TZ}
@@ -36,7 +36,7 @@ services:
       - "1883:1883"
       - "9001:9001"
     volumes:
-      - ./mosquitto_config:/mosquitto/config
+      - ${DOCKER_DIR}/mosquitto/config:/mosquitto/config
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     environment:

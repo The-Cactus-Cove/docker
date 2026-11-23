@@ -9,13 +9,26 @@ services:
         condition: service_started
     image: infisical/infisical:latest # PIN THIS TO A SPECIFIC TAG
     pull_policy: always
-    env_file: .env
     ports:
       - 7752:8080
+    # No env_file: Dockhand never writes secret variables to disk, and Git
+    # stacks get their overrides in .env.dockhand rather than .env. Compose
+    # interpolates ${VAR} from both, so map each variable explicitly.
     environment:
-      - NODE_ENV=production
-      - AUTH_SECRET
-      - ENCRYPTION_KEY
+      NODE_ENV: production
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
+      DB_CONNECTION_URI: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      REDIS_URL: redis://redis:6379
+      SITE_URL: ${SITE_URL:-http://localhost:8080}
+      OTEL_TELEMETRY_COLLECTION_ENABLED: "false"
+      # Uncomment once you have SMTP details (needed for invites / password resets):
+      # SMTP_HOST: ${SMTP_HOST}
+      # SMTP_PORT: ${SMTP_PORT}
+      # SMTP_FROM_ADDRESS: ${SMTP_FROM_ADDRESS}
+      # SMTP_FROM_NAME: ${SMTP_FROM_NAME:-Infisical}
+      # SMTP_USERNAME: ${SMTP_USERNAME}
+      # SMTP_PASSWORD: ${SMTP_PASSWORD}
     networks:
       - infisical
       - secrets
@@ -25,10 +38,7 @@ services:
   redis:
     image: redis
     container_name: infisical-dev-redis
-    env_file: .env
     restart: always
-    environment:
-      - ALLOW_EMPTY_PASSWORD=yes
     networks:
       - infisical
     volumes:
@@ -38,13 +48,17 @@ services:
     container_name: infisical-db
     image: postgres:14-alpine
     restart: always
-    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-infisical}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      POSTGRES_DB: ${POSTGRES_DB:-infisical}
     volumes:
       - infisical_db:/var/lib/postgresql/data
     networks:
       - infisical
     healthcheck:
-      test: "pg_isready --username=${POSTGRES_USER} && psql --username=${POSTGRES_USER} --list"
+      # $$ = read from the container's own env at runtime, not at compose parse time
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 5s
       timeout: 10s
       retries: 10

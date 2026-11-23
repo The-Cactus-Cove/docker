@@ -1,0 +1,60 @@
+services:
+  ddns-updater:
+    image: qmcgaw/ddns-updater
+    container_name: ddns-updater
+    restart: unless-stopped
+    network_mode: bridge
+    ports:
+      - 8420:8000/tcp
+    volumes:
+      - ddns-updater_data:/updater/data
+    labels:
+      - "dockhand.url=[DDNS Updater](http://10.0.0.56:8420)"
+  nginx-proxy-manager:
+    image: jc21/nginx-proxy-manager
+    container_name: nginx-proxy-manager
+    restart: unless-stopped
+    networks:
+      - proxy_net
+    ports:
+      - "80:80"   # Public HTTP Port
+      - "443:443" # Public HTTPS Port
+      - "81:81"   # Admin Web Port
+    volumes:
+      - nginx_data:/data
+      - nginx_letsencrypt:/etc/letsencrypt
+    environment:
+      - TZ=${TZ}
+    labels:
+      - "dockhand.url=[NGINX Proxy Manager](http://10.0.0.56:81)"
+  speedtest-tracker:
+    image: lscr.io/linuxserver/speedtest-tracker:latest
+    container_name: speedtest-tracker
+    restart: unless-stopped
+    ports:
+      - 8081:80
+      - 8443:443
+    volumes:
+      - speedtest-tracker_config:/config
+      - speedtest-tracker_ssl-keys:/config/keys
+    environment:
+      - TZ=${TZ}
+      - APP_KEY=${SPEEDTEST_API_KEY}
+      - DB_CONNECTION=sqlite
+      - SPEEDTEST_SCHEDULE=7 */1 * * *
+      - SPEEDTEST_SERVERS=1768,10170,59325,16960
+      - PRUNE_RESULTS_OLDER_THAN=14
+      - DISPLAY_TIMEZONE=${TZ}
+    labels:
+      - "dockhand.url=[Speedtest Tracker](http://192.168.1.4:8081)"
+
+volumes:
+  ddns-updater_data:
+  nginx_data:
+  nginx_letsencrypt:
+  speedtest-tracker_config:
+  speedtest-tracker_ssl-keys:
+
+networks:
+  proxy_net:
+    external: true

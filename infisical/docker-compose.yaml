@@ -18,6 +18,7 @@ services:
       - ENCRYPTION_KEY
     networks:
       - infisical
+      - secrets
     labels:
       - "dockhand.url=[Infisical](https://secrets.cactuscove.casa)"
 

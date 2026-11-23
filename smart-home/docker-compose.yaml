@@ -9,7 +9,7 @@ services:
       - ${DOCKER_DIR}/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
     devices:
-      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/ttyUSB0"
+      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00"
     labels:
       - "dockhand.url=[Home Assistant](https://hass.cactuscove.casa)"
   mosquitto:

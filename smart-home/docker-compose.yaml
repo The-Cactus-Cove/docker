@@ -22,7 +22,7 @@ services:
     volumes:
       - zwavejs:/usr/src/app/store
     devices:
-      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00"
+      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/zwave"
     environment:
       - ZWAVEJS_EXTERNAL_CONFIG=/usr/src/app/store/.config-db
       - TZ=${TZ}

@@ -1,0 +1,31 @@
+services:
+  home-assistant:
+    image: homeassistant/home-assistant
+    container_name: home-assistant
+    restart: unless-stopped
+    network_mode: host
+    stop_grace_period: 60s
+    volumes:
+      - ${DOCKER_DIR}/homeassistant/config:/config
+      - /etc/localtime:/etc/localtime:ro
+    devices:
+      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/ttyUSB0"
+    labels:
+      - "dockhand.url=[Home Assistant](https://hass.cactuscove.casa)"
+  mosquitto:
+    image: eclipse-mosquitto
+    container_name: mosquitto
+    restart: always
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto_config:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+      - mosquitto_log:/mosquitto/log
+    environment:
+      - TZ=${TZ}
+
+volumes:
+  mosquitto_data:
+  mosquitto_log:

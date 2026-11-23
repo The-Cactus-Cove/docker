@@ -8,10 +8,26 @@ services:
     volumes:
       - ${DOCKER_DIR}/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
-    devices:
-      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00"
     labels:
       - "dockhand.url=[Home Assistant](https://hass.cactuscove.casa)"
+  zwavejs:
+    image: zwavejs/zwavejs2mqtt:latest
+    container_name: zwavejs
+    restart: unless-stopped
+    tty: true
+    stop_signal: SIGINT
+    ports:
+      - "8091:8091"
+      - "4000:3000"
+    volumes:
+      - zwavejs:/usr/src/app/store
+    devices:
+      - "/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00:/dev/serial/by-id/usb-Nabu_Casa_ZWA-2_1CDBD4AD2AAC-if00"
+    environment:
+      - ZWAVEJS_EXTERNAL_CONFIG=/usr/src/app/store/.config-db
+      - TZ=${TZ}
+    labels:
+      - "dockhand.url=[Z-Wave JS](http://192.168.1.5:8091)"
   mosquitto:
     image: eclipse-mosquitto
     container_name: mosquitto
@@ -27,5 +43,6 @@ services:
       - TZ=${TZ}
 
 volumes:
+  zwavejs:
   mosquitto_data:
   mosquitto_log:

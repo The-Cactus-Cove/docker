@@ -16,6 +16,7 @@ services:
     image: eclipse-mosquitto
     container_name: mosquitto
     restart: always
+    user: "${PUID}:${PGID}"
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -24,8 +25,6 @@ services:
       - mosquitto_data:/mosquitto/data
       - mosquitto_log:/mosquitto/log
     environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
       - TZ=${TZ}
 
 volumes:

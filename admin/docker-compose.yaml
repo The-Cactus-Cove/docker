@@ -1,0 +1,210 @@
+services:
+  bookstack:
+    image: linuxserver/bookstack
+    container_name: bookstack
+    restart: unless-stopped
+    networks:
+      - proxy_net
+    volumes:
+      - bookstack_config:/config
+    environment:
+      - TZ=${TZ}
+      - APP_URL=https://bookstack.cactuscove.casa
+      - APP_KEY=${BOOKSTACK_APP_KEY}
+      - DB_HOST=bookstack_db
+      - DB_PORT=3306
+      - DB_USERNAME=bookstack
+      - DB_PASSWORD=${BOOKSTACK_DB_PASSWORD}
+      - DB_DATABASE=bookstack
+      - SESSION_LIFETIME=10080 # 7 days in minutes
+      - memory_limit=256M
+      - AUTH_METHOD=oidc
+      - AUTH_AUTO_INITIATE=true
+      - OIDC_NAME="Pocket ID"
+      - OIDC_DISPLAY_NAME_CLAIMS=name
+      - OIDC_CLIENT_ID=${BOOKSTACK_OIDC_CLIENT_ID}
+      - OIDC_CLIENT_SECRET=${BOOKSTACK_OIDC_CLIENT_SECRET}
+      - OIDC_ISSUER=https://auth.cactuscove.casa
+      - OIDC_END_SESSION_ENDPOINT=true
+      - OIDC_ISSUER_DISCOVER=true
+      - OIDC_USER_TO_GROUPS=true
+      - OIDC_GROUPS_CLAIM=groups
+      - OIDC_ADDITIONAL_SCOPES=groups
+      - OIDC_REMOVE_FROM_GROUPS=true
+    depends_on:
+      - bookstack_db
+    labels:
+      - "dockhand.url=[BookStack](https://bookstack.cactuscove.casa)"
+  bookstack_db:
+    image: linuxserver/mariadb
+    container_name: bookstack_db
+    restart: unless-stopped
+    volumes:
+      - bookstack_db:/config
+    environment:
+      - TZ=${TZ}
+      - MYSQL_ROOT_PASSWORD=${BOOKSTACK_DB_PASSWORD}
+      - MYSQL_DATABASE=bookstack
+      - MYSQL_USER=bookstack
+      - MYSQL_PASSWORD=${BOOKSTACK_DB_PASSWORD}
+
+  homebox:
+    image: ghcr.io/sysadminsmedia/homebox:latest
+    container_name: homebox
+    restart: unless-stopped
+    networks:
+      - proxy_net
+    volumes:
+      - homebox_data:/data/
+    environment:
+      - TZ=${TZ}
+      - HBOX_LOG_LEVEL=info
+      - HBOX_LOG_FORMAT=text
+      - HBOX_WEB_MAX_UPLOAD_SIZE=10
+      - HBOX_OPTIONS_ALLOW_REGISTRATION=false
+      - HBOX_AUTH_API_KEY_PEPPER=${HBOX_AUTH_API_KEY_PEPPER}
+      - HBOX_OIDC_ENABLED=true
+      - HBOX_OIDC_ISSUER_URL=https://auth.cactuscove.casa
+      - HBOX_OIDC_CLIENT_ID=${HBOX_OIDC_CLIENT_ID}
+      - HBOX_OIDC_CLIENT_SECRET=${HBOX_OIDC_CLIENT_SECRET}
+      - HBOX_OPTIONS_TRUST_PROXY=true
+      - HBOX_OPTIONS_HOSTNAME=homebox.cactuscove.casa
+      - HBOX_OIDC_AUTO_REDIRECT=true
+      - HBOX_OPTIONS_ALLOW_LOCAL_LOGIN=false
+    labels:
+      - "dockhand.url=[HomeBox](https://homebox.cactuscove.casa)"
+
+  vikunja:
+    image: vikunja/vikunja
+    container_name: vikunja
+    restart: unless-stopped
+    networks:
+      - proxy_net
+    volumes:
+      - vikunja_files:/app/vikunja/files
+    environment:
+      - TZ=${TZ}
+      - VIKUNJA_SERVICE_PUBLICURL=https://todo.cactuscove.casa
+      - VIKUNJA_DATABASE_HOST=vikunja_db
+      - VIKUNJA_DATABASE_PASSWORD=${VIKUNJA_DATABASE_PASSWORD}
+      - VIKUNJA_DATABASE_TYPE=postgres
+      - VIKUNJA_DATABASE_USER=vikunja
+      - VIKUNJA_DATABASE_DATABASE=vikunja
+      - VIKUNJA_SERVICE_SECRET=${VIKUNJA_SERVICE_SECRET}
+      - VIKUNJA_AUTH_OPENID_ENABLED=true
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_AUTHURL=https://auth.cactuscove.casa
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_CLIENTID=${VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_CLIENTID}
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_CLIENTSECRET=${VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_CLIENTSECRET}
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_NAME=PocketID
+      - VIKUNJA_AUTH_OPENID_PROVIDERS_POCKETID_SCOPE=openid profile email groups
+      - VIKUNJA_AUTH_LOCAL_ENABLED=false
+    depends_on:
+      vikunja_db:
+        condition: service_healthy
+    labels:
+      - "dockhand.url=[Vikunja](https://todo.cactuscove.casa)"
+  vikunja_db:
+    image: postgres:18
+    container_name: vikunja_db
+    restart: unless-stopped
+    volumes:
+      - vikunja_db:/var/lib/postgresql
+    environment:
+      - TZ=${TZ}
+      - POSTGRES_PASSWORD=${VIKUNJA_DATABASE_PASSWORD}
+      - POSTGRES_USER=vikunja
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h localhost -U $$POSTGRES_USER"]
+      interval: 2s
+      start_period: 30s
+
+  homelable-backend:
+    image: ghcr.io/pouzor/homelable-backend:latest
+    container_name: homelable-backend
+    restart: unless-stopped
+    networks:
+      - homelable
+    volumes:
+      - homelable-backend_data:/app/data
+    environment:
+      SQLITE_PATH: /app/data/homelab.db
+      CORS_ORIGINS: '["http://localhost:3000"]'
+      SECRET_KEY: ${HOMELABLE_SECRET_KEY}
+      SQLITE_PATH: ${HOMELABLE_SQLITE_PATH}
+      CORS_ORIGINS: ${HOMELABLE_CORS_ORIGINS}
+      AUTH_MODE: ${HOMELABLE_AUTH_MODE}
+      OIDC_DISCOVERY_URL: ${HOMELABLE_OIDC_DISCOVERY_URL}
+      OIDC_CLIENT_ID: ${HOMELABLE_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${HOMELABLE_OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URI: ${HOMELABLE_OIDC_REDIRECT_URI}
+      OIDC_SCOPES: ${HOMELABLE_OIDC_SCOPES}
+      OIDC_COOKIE_SECURE: ${HOMELABLE_OIDC_COOKIE_SECURE}
+      OIDC_SESSION_EXPIRE_MINUTES: ${HOMELABLE_OIDC_SESSION_EXPIRE_MINUTES}
+      OIDC_TRANSACTION_EXPIRE_SECONDS: ${HOMELABLE_OIDC_TRANSACTION_EXPIRE_SECONDS}
+      SCANNER_RANGES: ${HOMELABLE_SCANNER_RANGES}
+      MCP_API_KEY: ${HOMELABLE_MCP_API_KEY}
+      MCP_SERVICE_KEY: ${HOMELABLE_MCP_SERVICE_KEY}
+      ZWAVE_MQTT_HOST: ${HOMELABLE_ZWAVE_MQTT_HOST}
+      ZWAVE_MQTT_PORT: ${HOMELABLE_ZWAVE_MQTT_PORT}
+      ZWAVE_PREFIX: ${HOMELABLE_ZWAVE_PREFIX}
+      ZWAVE_GATEWAY_NAME: ${HOMELABLE_ZWAVE_GATEWAY_NAME}
+      ZWAVE_MQTT_TLS: ${HOMELABLE_ZWAVE_MQTT_TLS}
+      ZWAVE_MQTT_TLS_INSECURE: ${HOMELABLE_ZWAVE_MQTT_TLS_INSECURE}
+      MQTT_RESPONSE_TIMEOUT: ${HOMELABLE_MQTT_RESPONSE_TIMEOUT}
+    cap_add:
+      - NET_RAW
+  homelable-frontend:
+    image: ghcr.io/pouzor/homelable-frontend:latest
+    container_name: homelable-frontend
+    restart: unless-stopped
+    networks:
+      - homelable
+      - proxy_net
+    depends_on:
+      - homelable-backend
+  homelable-mcp:
+    image: ghcr.io/pouzor/homelable-mcp:latest
+    container_name: homelable-mcp
+    restart: unless-stopped
+    networks:
+      - homelable
+    depends_on:
+      - homelable-backend
+    environment:
+      BACKEND_URL: "http://homelable-backend:8000"
+      SECRET_KEY: ${HOMELABLE_SECRET_KEY}
+      SQLITE_PATH: ${HOMELABLE_SQLITE_PATH}
+      CORS_ORIGINS: ${HOMELABLE_CORS_ORIGINS}
+      AUTH_MODE: ${HOMELABLE_AUTH_MODE}
+      OIDC_DISCOVERY_URL: ${HOMELABLE_OIDC_DISCOVERY_URL}
+      OIDC_CLIENT_ID: ${HOMELABLE_OIDC_CLIENT_ID}
+      OIDC_CLIENT_SECRET: ${HOMELABLE_OIDC_CLIENT_SECRET}
+      OIDC_REDIRECT_URI: ${HOMELABLE_OIDC_REDIRECT_URI}
+      OIDC_SCOPES: ${HOMELABLE_OIDC_SCOPES}
+      OIDC_COOKIE_SECURE: ${HOMELABLE_OIDC_COOKIE_SECURE}
+      OIDC_SESSION_EXPIRE_MINUTES: ${HOMELABLE_OIDC_SESSION_EXPIRE_MINUTES}
+      OIDC_TRANSACTION_EXPIRE_SECONDS: ${HOMELABLE_OIDC_TRANSACTION_EXPIRE_SECONDS}
+      SCANNER_RANGES: ${HOMELABLE_SCANNER_RANGES}
+      MCP_API_KEY: ${HOMELABLE_MCP_API_KEY}
+      MCP_SERVICE_KEY: ${HOMELABLE_MCP_SERVICE_KEY}
+      ZWAVE_MQTT_HOST: ${HOMELABLE_ZWAVE_MQTT_HOST}
+      ZWAVE_MQTT_PORT: ${HOMELABLE_ZWAVE_MQTT_PORT}
+      ZWAVE_PREFIX: ${HOMELABLE_ZWAVE_PREFIX}
+      ZWAVE_GATEWAY_NAME: ${HOMELABLE_ZWAVE_GATEWAY_NAME}
+      ZWAVE_MQTT_TLS: ${HOMELABLE_ZWAVE_MQTT_TLS}
+      ZWAVE_MQTT_TLS_INSECURE: ${HOMELABLE_ZWAVE_MQTT_TLS_INSECURE}
+      MQTT_RESPONSE_TIMEOUT: ${HOMELABLE_MQTT_RESPONSE_TIMEOUT}
+
+volumes:
+  bookstack_config:
+  bookstack_db:
+  homebox_data:
+  vikunja_files:
+  vikunja_db:
+  homelable-backend_data:
+
+networks:
+  proxy_net:
+    external: true
+  mosquitto:
+    external: true

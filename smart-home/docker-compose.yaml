@@ -37,6 +37,9 @@ services:
     image: eclipse-mosquitto
     container_name: mosquitto
     restart: unless-stopped
+    networks:
+      - default
+      - mosquitto
     ports:
       - "1883:1883"
       - "9001:9001"
@@ -56,4 +59,6 @@ networks:
   proxy_net:
     external: true
   hass:
+    external: true
+  mosquitto:
     external: true

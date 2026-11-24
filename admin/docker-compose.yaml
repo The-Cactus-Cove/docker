@@ -169,6 +169,8 @@ services:
       - proxy_net
     depends_on:
       - homelable-backend
+    environment:
+      BACKEND_UPSTREAM: "homelable-backend:8000"
     labels:
       - "dockhand.url=[Homelable](https://homelable.cactuscove.casa)"
   homelable-mcp:

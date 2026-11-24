@@ -162,7 +162,7 @@ services:
     depends_on:
       - homelable-backend
     labels:
-      - "dockhand.url=[BookStack](https://homelable.cactuscove.casa)"
+      - "dockhand.url=[Homelable](https://homelable.cactuscove.casa)"
   homelable-mcp:
     image: ghcr.io/pouzor/homelable-mcp:latest
     container_name: homelable-mcp

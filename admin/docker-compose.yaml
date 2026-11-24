@@ -82,10 +82,13 @@ services:
     container_name: vikunja
     restart: unless-stopped
     networks:
+      - vikunja
       - proxy_net
     volumes:
       - vikunja_files:/app/vikunja/files
     environment:
+      - PUID=1000
+      - PGID=1000
       - TZ=${TZ}
       - VIKUNJA_SERVICE_PUBLICURL=https://todo.cactuscove.casa
       - VIKUNJA_DATABASE_HOST=vikunja_db
@@ -110,6 +113,8 @@ services:
     image: postgres:18
     container_name: vikunja_db
     restart: unless-stopped
+    networks:
+      - vikunja
     volumes:
       - vikunja_db:/var/lib/postgresql
     environment:
@@ -211,4 +216,5 @@ networks:
   mosquitto:
     external: true
   bookstack:
+  vikunja:
   homelable:

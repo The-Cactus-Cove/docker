@@ -163,6 +163,8 @@ services:
       - proxy_net
     depends_on:
       - homelable-backend
+    labels:
+      - "dockhand.url=[BookStack](https://homelable.cactuscove.casa)"
   homelable-mcp:
     image: ghcr.io/pouzor/homelable-mcp:latest
     container_name: homelable-mcp

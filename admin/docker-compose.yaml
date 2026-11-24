@@ -81,14 +81,13 @@ services:
     image: vikunja/vikunja
     container_name: vikunja
     restart: unless-stopped
+    user: "0:0"
     networks:
       - vikunja
       - proxy_net
     volumes:
       - vikunja_files:/app/vikunja/files
     environment:
-      - PUID=1000
-      - PGID=1000
       - TZ=${TZ}
       - VIKUNJA_SERVICE_PUBLICURL=https://todo.cactuscove.casa
       - VIKUNJA_DATABASE_HOST=vikunja_db

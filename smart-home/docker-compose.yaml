@@ -3,8 +3,12 @@ services:
     image: homeassistant/home-assistant
     container_name: home-assistant
     restart: unless-stopped
-    network_mode: host
     stop_grace_period: 60s
+    networks:
+      - default
+      - proxy_net
+    ports:
+      - "8123:8123"
     volumes:
       - ${DOCKER_DIR}/homeassistant/config:/config
       - /etc/localtime:/etc/localtime:ro
@@ -46,3 +50,7 @@ volumes:
   zwavejs:
   mosquitto_data:
   mosquitto_log:
+
+networks:
+  proxy_net:
+    external: true

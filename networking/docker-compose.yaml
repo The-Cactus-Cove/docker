@@ -27,9 +27,8 @@ services:
     image: lscr.io/linuxserver/speedtest-tracker:latest
     container_name: speedtest-tracker
     restart: unless-stopped
-    ports:
-      - 8081:80
-      - 8443:443
+    networks:
+      - proxy_net
     volumes:
       - speedtest-tracker_config:/config
       - speedtest-tracker_ssl-keys:/config/keys
@@ -41,12 +40,15 @@ services:
       - SPEEDTEST_SERVERS=1768,10170,59325,16960
       - PRUNE_RESULTS_OLDER_THAN=14
       - DISPLAY_TIMEZONE=${TZ}
+      - PUBLIC_DASHBOARD=true
     healthcheck:
       test: curl -fSs APP_URL/api/healthcheck | jq -r .message || exit 1
       interval: 10s
       retries: 3
       start_period: 30s
       timeout: 10s
+    labels:
+      - "dockhand.url=[Speedtest Tracker](https://speedtest.cactuscove.casa)"
 
 volumes:
   ddns-updater_data:

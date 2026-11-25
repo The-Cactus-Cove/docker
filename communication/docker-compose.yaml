@@ -3,6 +3,8 @@ services:
     image: caronc/apprise:v1.5.1
     container_name: apprise
     restart: unless-stopped
+    networks:
+      - apprise
     ports:
       - "8001:8000"
     volumes:
@@ -42,6 +44,8 @@ services:
 
 networks:
   proxy_net:
+    external: true
+  apprise:
     external: true
 
 volumes:

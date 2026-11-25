@@ -131,6 +131,7 @@ services:
     restart: unless-stopped
     networks:
       - homelable
+      - mosquitto
     volumes:
       - homelable-backend_data:/app/data
     environment:
@@ -178,6 +179,7 @@ services:
     restart: unless-stopped
     networks:
       - homelable
+      - mosquitto
     depends_on:
       - homelable-backend
     environment:

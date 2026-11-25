@@ -41,6 +41,12 @@ services:
       - SPEEDTEST_SERVERS=1768,10170,59325,16960
       - PRUNE_RESULTS_OLDER_THAN=14
       - DISPLAY_TIMEZONE=${TZ}
+    healthcheck:
+      test: curl -fSs APP_URL/api/healthcheck | jq -r .message || exit 1
+      interval: 10s
+      retries: 3
+      start_period: 30s
+      timeout: 10s
 
 volumes:
   ddns-updater_data:

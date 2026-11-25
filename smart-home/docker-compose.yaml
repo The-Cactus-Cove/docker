@@ -62,3 +62,5 @@ networks:
     external: true
   mosquitto:
     external: true
+  apprise:
+    external: true
